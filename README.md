@@ -10,12 +10,12 @@
 - 알파 블렌딩으로 자연스러운 파노라마 이미지 생성
 
 ## Requirements
-
+```
 Python 3.8
 OpenCV 4.10.0
 PyTorch 2.1.0
 NumPy 1.24.3
-
+```
 ## Usage
 1. `input_data` 폴더에 각 카메라의 이미지셋을 넣습니다. 
     
@@ -44,5 +44,5 @@ NumPy 1.24.3
      | | |-     ：
     ```
     
-2. multi2pano_stitch.py 코드를 실행하여 파노라마를 생성합니다.
+2. `multi2pano_stitch.py` 코드를 실행하여 파노라마를 생성합니다.
 3. 생성된 파노라마 이미지는 `panorama` 폴더에 저장됩니다.
