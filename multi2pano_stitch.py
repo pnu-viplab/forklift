@@ -1,8 +1,12 @@
+#######################################
+# Multi-camera image → Panorama image #
+#######################################
+
 import torch, glob, cv2, os
 import numpy as np
 import re
 
-# 스티칭 함수 정의
+# Multi camera stitching 함수 정의
 def stitch_images(img1, img2, mkpts0, mkpts1, inliers):
     inlier_pts0 = mkpts0[inliers.flatten()]
     inlier_pts1 = mkpts1[inliers.flatten()]
@@ -31,17 +35,19 @@ def stitch_images(img1, img2, mkpts0, mkpts1, inliers):
     bottom_right = non_zero_coords.max(axis=0)
 
     return stitched_image[top_left[0]:bottom_right[0] + 1, top_left[1]:bottom_right[1] + 1]
+    
 
 # 자연 정렬 키
+#  ▶ 이미지가 뒤죽박죽 섞이지 않도록 문자열을 자연 정렬
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
 
-# 로드된 매칭 결과
+# 저장된 matching point를 로드
 first_results = torch.load("matching_point/first_matching.pt")
 second_results = torch.load("matching_point/second_matching.pt")
 third_results = torch.load("matching_point/third_matching.pt")
 
-# 파일 경로와 출력 디렉터리 설정
+# multi image 파일 경로와 파노라마로 저장할 경로 설정
 image_files = [
     sorted(glob.glob(f"input_data/{str(i).zfill(2)}/*.png"), key=natural_sort_key)
     for i in range(1, 9)
@@ -49,19 +55,19 @@ image_files = [
 output_folder = "panorama"
 os.makedirs(output_folder, exist_ok=True)
 
-# 이미지 로드
+# multi image 로드
 images = [[cv2.imread(file, cv2.IMREAD_UNCHANGED) for file in files] for files in image_files]
 min_count = min(len(files) for files in image_files)
 print(len(images), len(images[0]), min_count)
 
 
-# 스티칭 반복
+# 스티칭 반복. 
 for idx in range(min_count):
     current_images = [ch[idx] for ch in images]
 
     i = 0
     first_images = []
-    for result in first_results:
+    for result in first_results: # 1번 스티칭 : 8장 → 4장 (0↔1, 2↔3, 4↔5, 6↔7)
         if i == 8 : break
         pair = result["pair"]
         mkpts0 = result["keypoints0"]
@@ -74,7 +80,7 @@ for idx in range(min_count):
 
     second_images = []
     j=0
-    for result in second_results :
+    for result in second_results : # 2번 스티칭 : 4장 → 2장 (01↔23, 45↔67)
         if j == 4 : break
         pair = result["pair"]
         mkpts0 = result["keypoints0"]
@@ -86,7 +92,7 @@ for idx in range(min_count):
         j += 2
 
     k = 0
-    for result in third_results :
+    for result in third_results : # 3번 스티칭 : 2장 → 1장 (0123↔4567)
         pair = result["pair"]
         mkpts0 = result["keypoints0"]
         mkpts1 = result["keypoints1"]
@@ -95,6 +101,6 @@ for idx in range(min_count):
         stitched_image = stitch_images(second_images[k], second_images[k+1], mkpts0, mkpts1, inliers)
         k += 2
 
-    # 결과 저장
+    # 파노라마 이미지 저장
     output_path = os.path.join(output_folder, f"stitched_{idx}.jpg")
     cv2.imwrite(output_path, stitched_image)
