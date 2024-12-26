@@ -37,16 +37,16 @@ def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
 
 # 로드된 매칭 결과
-first_results = torch.load("pretrained/first_matching.pt")
-second_results = torch.load("pretrained/second_matching.pt")
-third_results = torch.load("pretrained/third_matching.pt")
+first_results = torch.load("matching_point/first_matching.pt")
+second_results = torch.load("matching_point/second_matching.pt")
+third_results = torch.load("matching_point/third_matching.pt")
 
 # 파일 경로와 출력 디렉터리 설정
 image_files = [
     sorted(glob.glob(f"input_data/{str(i).zfill(2)}/*.png"), key=natural_sort_key)
     for i in range(1, 9)
 ]
-output_folder = "panorama2"
+output_folder = "panorama"
 os.makedirs(output_folder, exist_ok=True)
 
 # 이미지 로드
